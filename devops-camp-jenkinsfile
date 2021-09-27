@@ -13,7 +13,7 @@ pipeline {
         stage('Application repository') {
             steps {
                 echo "Cloning application repository"
-                sh 'git clone https://github.com/linvernSS/afs-labs.git'
+                sh 'git clone https://github.com/LinvernSS/afs-labs-student.git'
 		dir('afs-labs') {
 			script{
 				env.APP_HASH = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
@@ -26,7 +26,7 @@ pipeline {
                 echo "Building application image"
 		withCredentials([usernameColonPassword(credentialsId: 'jxu-harbor-auth', variable: 'HARBOR-AUTH')]) {
 			script {
-				docker.build('$APP_IMAGE_NAME-$APP_HASH', '-f ./app/Dockerfile ./afs-labs')
+				docker.build('$APP_IMAGE_NAME-$APP_HASH', '-f ./app/Dockerfile ./afs-labs-student')
 				docker.withRegistry('https://$HARBOR_REGISTRY', 'jxu-harbor-auth') {
 					sh 'docker tag $APP_IMAGE_NAME-$APP_HASH $HARBOR_REGISTRY/$HARBOR_REPOSITORY/$APP_IMAGE_NAME:$APP_HASH-$PIPELINE_HASH'
 					sh 'docker push $HARBOR_REGISTRY/$HARBOR_REPOSITORY/$APP_IMAGE_NAME:$APP_HASH-$PIPELINE_HASH'
@@ -41,7 +41,7 @@ pipeline {
                 echo "Building database image"
             	 withCredentials([usernameColonPassword(credentialsId: 'jxu-harbor-auth', variable: 'HARBOR-AUTH')]) {
                         script {
-                                docker.build('$DB_IMAGE_NAME-$APP_HASH', '-f ./db/Dockerfile ./afs-labs')
+                                docker.build('$DB_IMAGE_NAME-$APP_HASH', '-f ./db/Dockerfile ./afs-labs-student')
                                 docker.withRegistry('https://$HARBOR_REGISTRY', 'jxu-harbor-auth') {
                                         sh 'docker tag $DB_IMAGE_NAME-$APP_HASH $HARBOR_REGISTRY/$HARBOR_REPOSITORY/$DB_IMAGE_NAME:$APP_HASH-$PIPELINE_HASH'
                                         sh 'docker push $HARBOR_REGISTRY/$HARBOR_REPOSITORY/$DB_IMAGE_NAME:$APP_HASH-$PIPELINE_HASH'
