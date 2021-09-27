@@ -26,7 +26,7 @@ pipeline {
                 echo "Building application image"
 		withCredentials([usernameColonPassword(credentialsId: 'jxu-harbor-auth', variable: 'HARBOR-AUTH')]) {
 			script {
-				docker.build('$APP_IMAGE_NAME', '-f ./app/Dockerfile ./afs-labs)
+				docker.build('$APP_IMAGE_NAME', '-f ./app/Dockerfile ./afs-labs')
 				docker.withRegistry('https://$HARBOR_REGISTRY', 'jxu-harbor-auth') {
 					sh 'docker tag $APP_IMAGE_NAME $HARBOR_REGISTRY/$HARBOR_REPOSITORY/$APP_IMAGE_NAME:$APP_HASH-$PIPELINE_HASH'
 					sh 'docker push $HARBOR_REGISTRY/$HARBOR_REPOSITORY/$APP_IMAGE_NAME:$APP_HASH-$PIPELINE_HASH'
@@ -41,7 +41,7 @@ pipeline {
                 echo "Building database image"
             	 withCredentials([usernameColonPassword(credentialsId: 'jxu-harbor-auth', variable: 'HARBOR-AUTH')]) {
                         script {
-                                docker.build('$DB_IMAGE_NAME', '-f ./db/Dockerfile ./afs-labs)
+                                docker.build('$DB_IMAGE_NAME', '-f ./db/Dockerfile ./afs-labs')
                                 docker.withRegistry('https://$HARBOR_REGISTRY', 'jxu-harbor-auth') {
                                         sh 'docker tag $DB_IMAGE_NAME $HARBOR_REGISTRY/$HARBOR_REPOSITORY/$DB_IMAGE_NAME:$DB_HASH-$PIPELINE_HASH'
                                         sh 'docker push $HARBOR_REGISTRY/$HARBOR_REPOSITORY/$DB_IMAGE_NAME:$DB_HASH-$PIPELINE_HASH'
