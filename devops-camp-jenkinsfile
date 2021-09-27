@@ -69,7 +69,7 @@ pipeline {
 		sh 'docker rmi $HARBOR_REGISTRY/$HARBOR_REPOSITORY/$APP_IMAGE_NAME:$APP_HASH-$PIPELINE_HASH'
 		sh 'docker rmi $APP_IMAGE_NAME-$APP_HASH:latest'
 		sh 'docker rmi $HARBOR_REGISTRY/$HARBOR_REPOSITORY/$DB_IMAGE_NAME:$DB_HASH-$PIPELINE_HASH'
-		sh 'docker rmi $DB_IMAGE_NAME-$DB_HASH:latest'
+		sh 'docker rmi $DB_IMAGE_NAME-$APP_HASH:latest'
     	}
     }
 }
