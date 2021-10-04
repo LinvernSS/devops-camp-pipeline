@@ -98,6 +98,22 @@ pipeline {
     			sh 'echo $(cat $LOG_FILE_NAME)'
     			sh 'rm -rf $LOG_FILE_NAME'
 		}
+
+		post {
+			always {
+        			echo "Clean up local docker containers"
+        			script {
+            				try {
+               					sh 'docker rm -f $DB_CONTAINER_NAME'
+                				sh 'docker rm -f $APP_CONTAINER_NAME'
+                				sh 'docker network rm $NETWORK'
+            				} catch (err) {
+                				echo err.getMessage()
+            				}
+        			}
+    			}
+		}
+
     	    }
         }
         stage('Deploy') {
@@ -114,7 +130,8 @@ pipeline {
             echo "Clean workspace"
 		sh 'docker system prune -f'
 		sh 'rm -rf .git ./*'
-        }
+        
+	}
     }
 }
 
