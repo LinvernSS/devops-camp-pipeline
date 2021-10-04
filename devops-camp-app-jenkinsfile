@@ -7,6 +7,10 @@ pipeline {
 	HARBOR_REGISTRY = 'harbor.dev.afsmtddso.com'
 	HARBOR_PROJECT = 'jxu-devsecops'
 	APP_IMAGE_NAME = 'app'
+	APP_CONTAINER_NAME = 'jxu-web-app'
+	DB_CONTAINER_NAME = 'jxu-postgres-db'
+	NETWORK = 'jxu-feature-tests'
+	LOG_FILE_NAME = 'jxu_log_file.txt'
     }
     stages {
         stage('Application repository') {
@@ -58,7 +62,43 @@ pipeline {
         stage('Test'){
             steps {
                 echo "Testing stage"
-            }
+    		sh 'docker network create $NETWORK'
+		withCredentials([usernamePassword(credentialsId: 'db-auth', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+		    	sh """
+    			docker run -d --name "$DB_CONTAINER_NAME" \
+    			-p "5432:5432" \
+    			-e "POSTGRES_USER=${USERNAME}" \
+    			-e "POSTGRES_PASSWORD=${PASSWORD}" \
+    			-e "POSTGRES_DB=shop" \
+    			--network "$NETWORK" \
+    			postgres:9.6
+    			"""
+    			sh """
+    			docker run -d --name "$APP_CONTAINER_NAME" \
+    			-p "5000:5000" \
+    			-e "POSTGRES_USER=${USERNAME}" \
+    			-e "POSTGRES_PASSWORD=${PASSWORD}" \
+    			-e "DB_CONTAINER_NAME=$DB_CONTAINER_NAME" \
+    			-e "LOCATION_FEATURE_ENABLED=True" \
+    			--network "$NETWORK" \
+    			$HARBOR_REGISTRY/$HARBOR_REPOSITORY/$APP_IMAGE_NAME:$APP_HASH-$PIPELINE_HASH
+    			"""
+		}
+
+		script {
+			try {
+        			sh 'sleep 5 && docker exec $APP_CONTAINER_NAME python tests.py'
+    			} catch(Exception e) {
+        			sh 'docker cp $APP_CONTAINER_NAME:../farm-to-front-door/log_file.txt $LOG_FILE_NAME'
+        			sh 'echo $(cat $LOG_FILE_NAME)'
+        			sh 'rm -rf $LOG_FILE_NAME'
+        		error('Tests Failed with error ' + e)
+    			}
+    			sh 'docker cp $APP_CONTAINER_NAME:../farm-to-front-door/log_file.txt $LOG_FILE_NAME'
+    			sh 'echo $(cat $LOG_FILE_NAME)'
+    			sh 'rm -rf $LOG_FILE_NAME'
+		}
+    	    }
         }
         stage('Deploy') {
             steps {
